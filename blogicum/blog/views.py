@@ -1,7 +1,7 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, DetailView
 
-from .models import Post, Location, Category
+from .models import Post, Category
 
 
 class PostListView(ListView):
