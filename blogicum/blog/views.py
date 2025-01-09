@@ -1,21 +1,37 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from django.views.generic import ListView, DetailView
 
-posts = list()
-posts_dict = dict()
-
-def index(request):
-    template = 'blog/index.html'
-    context = {'posts': reversed(posts)}
-    return render(request, template, context)
+from .models import Post, Location, Category
 
 
-def post_detail(request, id):
-    template = 'blog/detail.html'
-    context = {'post': posts_dict[id]}
-    return render(request, template, context)
+class PostListView(ListView):
+    model = Post
+    template_name = 'blog/index.html'
+    context_object_name = 'post_list'
+    queryset = Post.published.order_by('-pub_date')[:5]
 
 
-def category_posts(request, category_slug):
-    template = 'blog/category.html'
-    context = {'category_slug': category_slug}
-    return render(request, template, context)
+class PostDetailView(DetailView):
+    model = Post
+    template_name = 'blog/detail.html'
+    context_object_name = 'post'
+
+    def get_object(self, queryset=None):
+        return Post.published.get_object_or_404(pk=self.kwargs['pk'])
+
+
+class CategoryView(ListView):
+    model = Post
+    template_name = 'blog/category.html'
+    context_object_name = 'post_list'
+
+    def get_queryset(self):
+        category = get_object_or_404(
+            Category, slug=self.kwargs['slug'], is_published=True)
+        return Post.published.filter(category=category).order_by('-pub_date')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['category'] = get_object_or_404(
+            Category, slug=self.kwargs['slug'])
+        return context

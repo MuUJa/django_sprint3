@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
+from django.utils.timezone import now
 
 
 User = get_user_model()
@@ -60,7 +62,22 @@ class Location(models.Model):
         return self.name
 
 
+class PublishedPostManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            is_published=True,
+            pub_date__lte=now(),
+            category__is_published=True
+        )
+
+    def get_object_or_404(self, **kwargs):
+        return get_object_or_404(self.get_queryset(), **kwargs)
+
+
 class Post(models.Model):
+    objects = models.Manager()
+    published = PublishedPostManager()
+
     title = models.CharField(
         max_length=256,
         verbose_name="Заголовок"
@@ -70,7 +87,8 @@ class Post(models.Model):
     )
     pub_date = models.DateTimeField(
         verbose_name="Дата и время публикации",
-        help_text="Если установить дату и время в будущем — можно делать отложенные публикации."
+        help_text="Если установить дату и время в будущем — можно делать "
+                  "отложенные публикации."
     )
     author = models.ForeignKey(
         User,
