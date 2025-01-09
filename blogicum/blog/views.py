@@ -1,5 +1,7 @@
 from django.shortcuts import render
 
+posts = list()
+posts_dict = dict()
 
 def index(request):
     template = 'blog/index.html'
